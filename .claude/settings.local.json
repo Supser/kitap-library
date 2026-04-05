@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp \"lib/Книги 6 класс/Меня зовут Кожа.jpg\" \"public/covers/kozha.jpg\")",
+      "Bash(cp \"lib/Книги 6 класс/Маленький принц.jpg\" \"public/covers/princ.jpg\")",
+      "Bash(cp \"lib/Книги 6 класс/гари поттер.jpg\" \"public/covers/harry.jpg\")",
+      "Bash(cp \"lib/Книги 6 класс/Робинзон г.jpg\" \"public/covers/robinson.jpg\")",
+      "Bash(cp \"lib/Книги 6 класс/Вокруг светаjpg.jpg\" \"public/covers/vokrug.jpg\")"
+    ]
+  }
+}
