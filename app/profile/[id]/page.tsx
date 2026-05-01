@@ -78,39 +78,49 @@ export default function ProfilePage() {
   return (
     <>
       <Navbar lang={lang} />
-      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f8f6f1' }}>
+      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f5f3ee' }}>
 
         {/* Profile header */}
-        <div style={{ background: 'linear-gradient(135deg, #0e1c3a 0%, #1a2d5a 100%)', padding: '48px 2.5rem 40px' }}>
-          <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+        <div style={{
+          background: 'linear-gradient(135deg, #06080f 0%, #1a2d5a 100%)',
+          padding: '56px clamp(1.5rem, 4vw, 2.5rem) 48px',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          {/* Decorative orbs */}
+          <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(201,168,76,0.06)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', bottom: -80, left: -40, width: 250, height: 250, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
+
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
             {/* Avatar */}
             <div style={{
-              width: 80, height: 80, borderRadius: '50%',
-              background: '#c9a84c', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: "'Unbounded', sans-serif", fontSize: 28, fontWeight: 700, color: '#0e1c3a',
-              flexShrink: 0
+              width: 84, height: 84, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #c9a84c, #a07830)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: "'Unbounded', sans-serif", fontSize: 30, fontWeight: 700, color: '#0e1c3a',
+              boxShadow: '0 0 0 4px rgba(201,168,76,0.2), 0 8px 32px rgba(0,0,0,0.4)',
+              flexShrink: 0,
             }}>
               {profile?.full_name?.[0]?.toUpperCase() || '?'}
             </div>
 
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
+              <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(18px, 3vw, 26px)', fontWeight: 700, color: '#fff', letterSpacing: '-.01em', marginBottom: 6 }}>
                 {profile?.full_name || 'Пользователь'}
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginBottom: 16 }}>
-                {userBooks.length} книг на полке
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
+                {userBooks.length} {lang === 'kz' ? 'кітап сөреде' : 'книг на полке'}
               </div>
 
               {/* Stats */}
-              <div style={{ display: 'flex', gap: 20 }}>
-                {Object.entries(STATUS_LABELS).map(([k, v]) => (
-                  <div key={k} style={{ textAlign: 'center' }}>
-                    <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 16, fontWeight: 700, color: '#c9a84c' }}>
-                      {userBooks.filter(b => b.status === k).length}
-                    </div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
-                      {k === 'want' ? 'хочу' : k === 'reading' ? 'читаю' : 'прочитал'}
-                    </div>
+              <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
+                {[
+                  [userBooks.filter(b => b.status === 'want').length,    lang === 'kz' ? 'оқығым келеді' : 'хочу'],
+                  [userBooks.filter(b => b.status === 'reading').length,  lang === 'kz' ? 'оқып жатырмын' : 'читаю'],
+                  [userBooks.filter(b => b.status === 'done').length,     lang === 'kz' ? 'оқып болдым' : 'прочитал'],
+                ].map(([n, l], i) => (
+                  <div key={i}>
+                    <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: 700, color: '#c9a84c', lineHeight: 1 }}>{n}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{l}</div>
                   </div>
                 ))}
               </div>
@@ -149,14 +159,15 @@ export default function ProfilePage() {
         <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 2.5rem 80px' }}>
           {/* Tabs */}
           <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
-            {([['all', 'Все'], ['want', 'Хочу прочитать'], ['reading', 'Читаю'], ['done', 'Прочитал(а)']] as const).map(([k, label]) => (
+            {([['all', lang === 'kz' ? 'Барлығы' : 'Все'], ['want', lang === 'kz' ? 'Оқығым келеді' : 'Хочу'], ['reading', lang === 'kz' ? 'Оқып жатырмын' : 'Читаю'], ['done', lang === 'kz' ? 'Оқып болдым' : 'Прочитал(а)']] as const).map(([k, label]) => (
               <button key={k} onClick={() => setActiveTab(k)} style={{
                 background: activeTab === k ? '#1a2d5a' : '#fff',
                 color: activeTab === k ? '#fff' : '#1a2d5a',
-                border: `1px solid ${activeTab === k ? '#1a2d5a' : 'rgba(26,45,90,0.14)'}`,
-                fontSize: 12, fontWeight: 500, padding: '7px 16px', borderRadius: 4
+                border: `1.5px solid ${activeTab === k ? '#1a2d5a' : 'rgba(26,45,90,0.12)'}`,
+                fontSize: 12, fontWeight: activeTab === k ? 600 : 400, padding: '7px 16px', borderRadius: 5,
+                transition: 'all .15s',
               }}>
-                {label} ({k === 'all' ? userBooks.length : userBooks.filter(b => b.status === k).length})
+                {label} <span style={{ fontSize: 11, opacity: .7 }}>({k === 'all' ? userBooks.length : userBooks.filter(b => b.status === k).length})</span>
               </button>
             ))}
           </div>

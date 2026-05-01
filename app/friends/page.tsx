@@ -69,7 +69,7 @@ export default function FriendsPage() {
   if (!currentUser && !loading) return (
     <>
       <Navbar lang={lang} />
-      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f8f6f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f5f3ee', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 15, color: 'rgba(14,28,58,0.5)', marginBottom: 16 }}>Войди, чтобы видеть друзей</div>
           <Link href="/login" style={{ background: '#c9a84c', color: '#0e1c3a', padding: '10px 24px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
@@ -83,7 +83,7 @@ export default function FriendsPage() {
   return (
     <>
       <Navbar lang={lang} />
-      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f8f6f1' }}>
+      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f5f3ee' }}>
         <div style={{ maxWidth: 700, margin: '0 auto', padding: '48px 2.5rem 80px' }}>
 
           <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 24, fontWeight: 700, color: '#0e1c3a', marginBottom: 32 }}>
@@ -107,7 +107,7 @@ export default function FriendsPage() {
             {searchResults.length > 0 && (
               <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {searchResults.map(u => (
-                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#f8f6f1', borderRadius: 8 }}>
+                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: '#f5f3ee', borderRadius: 8 }}>
                     <Link href={`/profile/${u.id}`} style={{ fontSize: 14, fontWeight: 500, color: '#0e1c3a' }}>
                       {u.full_name || 'Пользователь'}
                     </Link>

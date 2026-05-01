@@ -5,7 +5,12 @@
       "Bash(cp \"lib/Книги 6 класс/Маленький принц.jpg\" \"public/covers/princ.jpg\")",
       "Bash(cp \"lib/Книги 6 класс/гари поттер.jpg\" \"public/covers/harry.jpg\")",
       "Bash(cp \"lib/Книги 6 класс/Робинзон г.jpg\" \"public/covers/robinson.jpg\")",
-      "Bash(cp \"lib/Книги 6 класс/Вокруг светаjpg.jpg\" \"public/covers/vokrug.jpg\")"
+      "Bash(cp \"lib/Книги 6 класс/Вокруг светаjpg.jpg\" \"public/covers/vokrug.jpg\")",
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(gunzip -c \"C:\\\\Users\\\\user\\\\.claude\\\\projects\\\\c--Users-user-kitap-library\\\\73dd7e71-c333-4a71-9d89-de702ae8af94\\\\tool-results\\\\webfetch-1777644301946-t25xkt.bin\")",
+      "Bash(tar -t)",
+      "Bash(tar -xO \"untitled/project/Kitap Redesign.html\")",
+      "Bash(tar -xO \"untitled/chats/chat1.md\")"
     ]
   }
 }
