@@ -10,7 +10,8 @@
       "Bash(gunzip -c \"C:\\\\Users\\\\user\\\\.claude\\\\projects\\\\c--Users-user-kitap-library\\\\73dd7e71-c333-4a71-9d89-de702ae8af94\\\\tool-results\\\\webfetch-1777644301946-t25xkt.bin\")",
       "Bash(tar -t)",
       "Bash(tar -xO \"untitled/project/Kitap Redesign.html\")",
-      "Bash(tar -xO \"untitled/chats/chat1.md\")"
+      "Bash(tar -xO \"untitled/chats/chat1.md\")",
+      "Bash(npx tsc *)"
     ]
   }
 }

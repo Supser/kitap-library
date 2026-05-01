@@ -1,39 +1,75 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; font-size: 16px; }
+html { scroll-behavior: smooth; }
 body {
-  background: #f5f3ee;
-  color: #0e1c3a;
+  background: #F2EDE4;
+  color: #1C1410;
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  min-height: 100vh;
 }
-a { text-decoration: none; color: inherit; }
-button { cursor: pointer; font-family: inherit; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
 input, textarea { font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+img { display: block; }
 
 :root {
-  --navy: #0e1c3a;
-  --navy-mid: #1a2d5a;
-  --gold: #c9a84c;
-  --gold-light: #e8c97a;
-  --bg: #f5f3ee;
-  --white: #ffffff;
-  --border: rgba(26,45,90,0.10);
-  --muted: rgba(14,28,58,0.45);
+  --ink:        #1C1410;
+  --ink-mid:    #3D2B1F;
+  --ink-light:  rgba(28,20,16,0.5);
+  --ink-faint:  rgba(28,20,16,0.28);
+  --paper:      #F2EDE4;
+  --paper-dark: #E8E0D2;
+  --paper-deep: #DDD3C0;
+  --cream:      #FAF7F2;
+  --gold:       #C8963E;
+  --gold-light: #E8B86D;
+  --gold-dark:  #9B6E22;
+  --gold-glow:  rgba(200,150,62,0.18);
+  --navy:       #1A2744;
+  --navy-mid:   #243358;
+  --forest:     #1E3A2F;
+  --border:     rgba(28,20,16,0.10);
+  --border-mid: rgba(28,20,16,0.18);
+  --serif:      'Playfair Display', Georgia, serif;
+  --sans:       'DM Sans', system-ui, sans-serif;
+  --display:    'Unbounded', sans-serif;
 }
 
-::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(14,28,58,0.15); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: var(--paper-deep); border-radius: 4px; }
 
-/* ── Animations ─────────────────────────────────────── */
+/* ── Noise texture overlay ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: .025;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ── Keyframes ── */
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
 }
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(.94); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
 }
 @keyframes floatA {
   0%, 100% { transform: translateY(0px) rotate(-2deg); }
@@ -47,20 +83,29 @@ input, textarea { font-family: inherit; }
   0%, 100% { transform: translateY(-6px) rotate(-1deg); }
   50%       { transform: translateY(6px) rotate(0deg); }
 }
-@keyframes bookReveal {
-  0%   { opacity: 0; transform: translateY(40px) scale(0.85) rotateY(-15deg); }
-  60%  { opacity: 1; transform: translateY(-8px) scale(1.03) rotateY(3deg); }
-  100% { opacity: 1; transform: translateY(0px) scale(1) rotateY(0deg); }
+@keyframes bookOpen {
+  0%   { opacity: 0; transform: perspective(800px) rotateY(-35deg) scale(.85); }
+  70%  { transform: perspective(800px) rotateY(4deg) scale(1.02); }
+  100% { opacity: 1; transform: perspective(800px) rotateY(0deg) scale(1); }
 }
 @keyframes modalSlideIn {
-  0%   { opacity: 0; transform: translateY(24px) scale(0.97); }
-  100% { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 @keyframes glowPulse {
   0%   { opacity: 0.6; transform: scale(1); }
-  100% { opacity: 1; transform: scale(1.08); }
+  100% { opacity: 1;   transform: scale(1.08); }
 }
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
 }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes revealLine {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* modal scroll */
+.modal-scroll::-webkit-scrollbar { width: 3px; }
+.modal-scroll::-webkit-scrollbar-thumb { background: var(--paper-deep); }

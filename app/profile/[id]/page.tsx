@@ -7,10 +7,10 @@ import BookModal from '@/components/BookModal'
 import { createClient } from '@/lib/supabase'
 import { BOOKS, type Book } from '@/lib/books'
 
-const STATUS_LABELS: Record<string, { label: string; color: string }> = {
-  want:    { label: '📚 Хочу прочитать', color: '#1a2d5a' },
-  reading: { label: '📖 Читаю',          color: '#c9a84c' },
-  done:    { label: '✅ Прочитал(а)',     color: '#2a7a4a' },
+const STATUS_META: Record<string, { label: string; color: string; bg: string }> = {
+  want:    { label: '📚 Хочу прочитать', color: 'var(--navy)',      bg: 'rgba(26,39,68,.1)' },
+  reading: { label: '📖 Читаю',          color: 'var(--gold-dark)', bg: 'rgba(155,110,34,.1)' },
+  done:    { label: '✅ Прочитал(а)',     color: 'var(--forest)',    bg: 'rgba(30,58,47,.1)' },
 }
 
 export default function ProfilePage() {
@@ -61,16 +61,21 @@ export default function ProfilePage() {
   }
 
   const filteredBooks = userBooks.filter(ub => activeTab === 'all' || ub.status === activeTab)
-
   const getBook = (bookId: string) => BOOKS.find(b => b.id === bookId)
-
   const isOwn = currentUser?.id === id
+
+  const counts = {
+    all:     userBooks.length,
+    want:    userBooks.filter(b => b.status === 'want').length,
+    reading: userBooks.filter(b => b.status === 'reading').length,
+    done:    userBooks.filter(b => b.status === 'done').length,
+  }
 
   if (loading) return (
     <>
       <Navbar lang={lang} />
-      <div style={{ paddingTop: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ color: 'rgba(14,28,58,0.4)', fontSize: 14 }}>Загружаем профиль...</div>
+      <div style={{ paddingTop: 62, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'var(--paper)' }}>
+        <div style={{ color: 'var(--ink-faint)', fontSize: 14, fontFamily: 'var(--serif)', fontStyle: 'italic' }}>Загружаем профиль...</div>
       </div>
     </>
   )
@@ -78,152 +83,126 @@ export default function ProfilePage() {
   return (
     <>
       <Navbar lang={lang} />
-      <div style={{ paddingTop: 64, minHeight: '100vh', background: '#f5f3ee' }}>
+      <div style={{ paddingTop: 62, minHeight: '100vh', background: 'var(--paper)' }}>
 
         {/* Profile header */}
         <div style={{
-          background: 'linear-gradient(135deg, #06080f 0%, #1a2d5a 100%)',
-          padding: '56px clamp(1.5rem, 4vw, 2.5rem) 48px',
+          background: 'linear-gradient(135deg, var(--navy) 0%, #0E1628 100%)',
+          padding: '52px clamp(1.5rem, 5vw, 4rem) 48px',
           position: 'relative', overflow: 'hidden',
         }}>
-          {/* Decorative orbs */}
-          <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: 'rgba(201,168,76,0.06)', pointerEvents: 'none' }} />
-          <div style={{ position: 'absolute', bottom: -80, left: -40, width: 250, height: 250, borderRadius: '50%', background: 'rgba(255,255,255,0.03)', pointerEvents: 'none' }} />
-
-          <div style={{ maxWidth: 900, margin: '0 auto', display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
-            {/* Avatar */}
-            <div style={{
-              width: 84, height: 84, borderRadius: '50%',
-              background: 'linear-gradient(135deg, #c9a84c, #a07830)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: "'Unbounded', sans-serif", fontSize: 30, fontWeight: 700, color: '#0e1c3a',
-              boxShadow: '0 0 0 4px rgba(201,168,76,0.2), 0 8px 32px rgba(0,0,0,0.4)',
-              flexShrink: 0,
-            }}>
-              {profile?.full_name?.[0]?.toUpperCase() || '?'}
-            </div>
-
-            <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(18px, 3vw, 26px)', fontWeight: 700, color: '#fff', letterSpacing: '-.01em', marginBottom: 6 }}>
-                {profile?.full_name || 'Пользователь'}
+          <div style={{ position: 'absolute', top: -60, right: -40, width: 320, height: 320, borderRadius: '50%', background: 'radial-gradient(circle,rgba(200,150,62,.08),transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ maxWidth: 1100, margin: '0 auto', position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28, flexWrap: 'wrap' }}>
+              {/* Avatar */}
+              <div style={{
+                width: 72, height: 72, borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: 'var(--serif)', fontSize: 28, fontWeight: 700, color: 'var(--ink)',
+                boxShadow: '0 0 0 4px rgba(200,150,62,.2), 0 8px 30px rgba(0,0,0,.4)',
+                flexShrink: 0,
+              }}>
+                {profile?.full_name?.[0]?.toUpperCase() || '?'}
               </div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
-                {userBooks.length} {lang === 'kz' ? 'кітап сөреде' : 'книг на полке'}
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 'clamp(20px,3vw,28px)', fontWeight: 700, color: '#F5EFE6', marginBottom: 4 }}>
+                  {profile?.full_name || 'Пользователь'}
+                </div>
+                <div style={{ fontSize: 12, color: 'rgba(245,239,230,.35)' }}>
+                  {counts.all} {lang === 'kz' ? 'кітап сөреде' : 'книг на полке'}
+                </div>
               </div>
 
-              {/* Stats */}
-              <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap' }}>
-                {[
-                  [userBooks.filter(b => b.status === 'want').length,    lang === 'kz' ? 'оқығым келеді' : 'хочу'],
-                  [userBooks.filter(b => b.status === 'reading').length,  lang === 'kz' ? 'оқып жатырмын' : 'читаю'],
-                  [userBooks.filter(b => b.status === 'done').length,     lang === 'kz' ? 'оқып болдым' : 'прочитал'],
-                ].map(([n, l], i) => (
-                  <div key={i}>
-                    <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(20px, 3vw, 28px)', fontWeight: 700, color: '#c9a84c', lineHeight: 1 }}>{n}</div>
-                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{l}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Friend button */}
-            {!isOwn && currentUser && (
-              <div>
-                {friendStatus === 'accepted' ? (
-                  <div style={{ background: 'rgba(255,255,255,0.1)', color: '#c9a84c', padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
-                    ✓ Друзья
-                  </div>
+              {/* Friend button */}
+              {!isOwn && currentUser && (
+                friendStatus === 'accepted' ? (
+                  <div style={{ background: 'rgba(200,150,62,.12)', color: 'var(--gold)', padding: '8px 20px', borderRadius: 6, fontSize: 12, fontWeight: 600, border: '1px solid rgba(200,150,62,.25)' }}>✓ Друзья</div>
                 ) : friendStatus === 'pending' ? (
-                  <div style={{ background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.45)', padding: '8px 20px', borderRadius: 6, fontSize: 13 }}>
-                    Запрос отправлен
-                  </div>
+                  <div style={{ background: 'rgba(255,255,255,.06)', color: 'rgba(255,255,255,.4)', padding: '8px 20px', borderRadius: 6, fontSize: 12, border: '1px solid rgba(255,255,255,.1)' }}>Запрос отправлен</div>
                 ) : (
                   <button onClick={sendFriendRequest} style={{
-                    background: '#c9a84c', color: '#0e1c3a', border: 'none',
-                    padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 600
-                  }}>
-                    + Добавить в друзья
-                  </button>
-                )}
-              </div>
-            )}
-            {!isOwn && !currentUser && (
-              <Link href="/login" style={{ background: '#c9a84c', color: '#0e1c3a', padding: '8px 20px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
-                Войти
-              </Link>
-            )}
+                    background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                    color: 'var(--ink)', fontFamily: 'var(--display)', fontSize: 11, fontWeight: 700,
+                    padding: '8px 20px', borderRadius: 6, border: 'none',
+                    boxShadow: '0 2px 14px rgba(200,150,62,.3)',
+                  }}>+ Добавить в друзья</button>
+                )
+              )}
+              {!isOwn && !currentUser && (
+                <Link href="/login" style={{
+                  background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                  color: 'var(--ink)', fontFamily: 'var(--display)', fontSize: 11, fontWeight: 700,
+                  padding: '8px 20px', borderRadius: 6, boxShadow: '0 2px 14px rgba(200,150,62,.3)',
+                }}>Войти</Link>
+              )}
+            </div>
+
+            {/* Stats row */}
+            <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap' }}>
+              {[
+                [counts.want,    lang === 'kz' ? 'оқығым келеді' : 'хочу прочитать'],
+                [counts.reading, lang === 'kz' ? 'оқып жатырмын' : 'читаю сейчас'],
+                [counts.done,    lang === 'kz' ? 'оқып болдым'   : 'прочитал(а)'],
+              ].map(([n, l], i) => (
+                <div key={i}>
+                  <div style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(22px,3vw,30px)', fontWeight: 700, color: 'var(--gold)', lineHeight: 1 }}>{n}</div>
+                  <div style={{ fontSize: 11, color: 'rgba(245,239,230,.3)', marginTop: 4 }}>{l as string}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
         {/* Books */}
-        <div style={{ maxWidth: 900, margin: '0 auto', padding: '32px 2.5rem 80px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', padding: '36px clamp(1.5rem, 5vw, 4rem) 80px' }}>
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
-            {([['all', lang === 'kz' ? 'Барлығы' : 'Все'], ['want', lang === 'kz' ? 'Оқығым келеді' : 'Хочу'], ['reading', lang === 'kz' ? 'Оқып жатырмын' : 'Читаю'], ['done', lang === 'kz' ? 'Оқып болдым' : 'Прочитал(а)']] as const).map(([k, label]) => (
-              <button key={k} onClick={() => setActiveTab(k)} style={{
-                background: activeTab === k ? '#1a2d5a' : '#fff',
-                color: activeTab === k ? '#fff' : '#1a2d5a',
-                border: `1.5px solid ${activeTab === k ? '#1a2d5a' : 'rgba(26,45,90,0.12)'}`,
-                fontSize: 12, fontWeight: activeTab === k ? 600 : 400, padding: '7px 16px', borderRadius: 5,
-                transition: 'all .15s',
-              }}>
-                {label} <span style={{ fontSize: 11, opacity: .7 }}>({k === 'all' ? userBooks.length : userBooks.filter(b => b.status === k).length})</span>
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: 6, marginBottom: 32, flexWrap: 'wrap' }}>
+            {(['all', 'want', 'reading', 'done'] as const).map(k => {
+              const labels: Record<string, string> = {
+                all:     lang === 'kz' ? 'Барлығы'         : 'Все',
+                want:    lang === 'kz' ? 'Оқығым келеді'   : 'Хочу',
+                reading: lang === 'kz' ? 'Оқып жатырмын'   : 'Читаю',
+                done:    lang === 'kz' ? 'Оқып болдым'     : 'Прочитал(а)',
+              }
+              return (
+                <button key={k} onClick={() => setActiveTab(k)} style={{
+                  padding: '7px 18px', borderRadius: 20, fontSize: 12, fontWeight: activeTab === k ? 500 : 400,
+                  background: activeTab === k ? 'var(--ink)' : 'transparent',
+                  color: activeTab === k ? '#fff' : 'var(--ink-light)',
+                  border: `1px solid ${activeTab === k ? 'var(--ink)' : 'var(--border)'}`,
+                  transition: 'all .15s',
+                }}>
+                  {labels[k]} <span style={{ opacity: .6 }}>({counts[k]})</span>
+                </button>
+              )
+            })}
           </div>
 
           {filteredBooks.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: 'rgba(14,28,58,0.3)' }}>
-              📚<br /><br />
-              {isOwn ? 'Добавь первую книгу в каталоге' : 'Здесь пока пусто'}
+            <div style={{ textAlign: 'center', padding: '60px 0' }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 48, color: 'var(--paper-deep)', marginBottom: 16, fontStyle: 'italic' }}>◇</div>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 18, color: 'var(--ink)', marginBottom: 8 }}>
+                {isOwn ? 'Добавь первую книгу' : 'Здесь пока пусто'}
+              </div>
               {isOwn && (
                 <div style={{ marginTop: 16 }}>
-                  <Link href="/catalog" style={{ background: '#c9a84c', color: '#0e1c3a', padding: '10px 24px', borderRadius: 6, fontSize: 13, fontWeight: 600 }}>
-                    Перейти в каталог
-                  </Link>
+                  <Link href="/catalog" style={{
+                    background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                    color: 'var(--ink)', fontFamily: 'var(--display)', fontSize: 11, fontWeight: 700,
+                    padding: '10px 24px', borderRadius: 6, boxShadow: '0 2px 14px rgba(200,150,62,.3)',
+                  }}>Перейти в каталог</Link>
                 </div>
               )}
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 28 }}>
               {filteredBooks.map(ub => {
                 const book = getBook(ub.book_id)
                 if (!book) return null
-                const st = STATUS_LABELS[ub.status]
+                const sm = STATUS_META[ub.status] || STATUS_META.want
                 return (
-                  <div key={ub.id} onClick={() => setSelectedBook(book)}
-                    style={{
-                      background: '#fff', borderRadius: 10, padding: '16px 20px',
-                      border: '1px solid rgba(26,45,90,0.09)', cursor: 'pointer',
-                      display: 'flex', gap: 16, alignItems: 'flex-start',
-                      transition: 'box-shadow .15s'
-                    }}
-                    onMouseEnter={e => (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 16px rgba(26,45,90,0.1)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLElement).style.boxShadow = ''}
-                  >
-                    {/* Color block */}
-                    <div style={{ width: 44, height: 60, background: book.color, borderRadius: 4, flexShrink: 0 }} />
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: '#0e1c3a', marginBottom: 3, overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>
-                        {book.title}
-                      </div>
-                      <div style={{ fontSize: 12, color: 'rgba(14,28,58,0.45)', marginBottom: 8 }}>{book.author}</div>
-                      <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 11, color: st.color, fontWeight: 600 }}>{st.label}</span>
-                        {ub.rating && (
-                          <span style={{ fontSize: 12, color: '#c9a84c' }}>
-                            {'★'.repeat(ub.rating)}{'☆'.repeat(5 - ub.rating)}
-                          </span>
-                        )}
-                      </div>
-                      {ub.review && (
-                        <div style={{ marginTop: 8, fontSize: 12, color: 'rgba(14,28,58,0.55)', lineHeight: 1.6, fontStyle: 'italic', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as any }}>
-                          «{ub.review}»
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <LibraryBookCard key={ub.id} book={book} ub={ub} sm={sm} onClick={() => setSelectedBook(book)} />
                 )
               })}
             </div>
@@ -233,5 +212,44 @@ export default function ProfilePage() {
 
       {selectedBook && <BookModal book={selectedBook} onClose={() => setSelectedBook(null)} lang={lang} />}
     </>
+  )
+}
+
+function LibraryBookCard({ book, ub, sm, onClick }: { book: Book; ub: any; sm: { label: string; color: string; bg: string }; onClick: () => void }) {
+  const [hov, setHov] = useState(false)
+  return (
+    <div onClick={onClick} onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{ cursor: 'pointer' }}>
+      <div style={{
+        position: 'relative', marginBottom: 14,
+        transform: hov ? 'translateY(-8px) rotate(-1.5deg)' : 'none',
+        transition: 'transform .25s cubic-bezier(.34,1.4,.64,1)',
+      }}>
+        <div style={{ position: 'absolute', bottom: -10, left: '10%', right: '10%', height: 18, background: 'rgba(28,20,16,.18)', filter: 'blur(8px)', borderRadius: '50%', transition: 'transform .25s', transform: hov ? 'scaleX(0.9)' : 'scaleX(1)' }} />
+        <div style={{
+          height: 240, borderRadius: '3px 10px 10px 3px', overflow: 'hidden', background: book.color,
+          boxShadow: hov ? `-8px 12px 32px rgba(0,0,0,.22), 0 0 0 1.5px ${sm.color}44` : '-4px 6px 16px rgba(0,0,0,.15)',
+          transition: 'box-shadow .25s', position: 'relative',
+        }}>
+          <img src={book.cover} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .4s', transform: hov ? 'scale(1.04)' : 'scale(1)' }} onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(18,16,14,.6) 0%, transparent 50%)' }} />
+          <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 6, background: 'linear-gradient(to right,rgba(255,255,255,.18),transparent)' }} />
+          <div style={{ position: 'absolute', top: 2, right: 0, bottom: 2, width: 6, background: 'repeating-linear-gradient(to bottom,#f0ede6 0,#e0d8cc 2px)', borderRadius: '0 2px 2px 0' }} />
+          {ub.rating > 0 && (
+            <div style={{ position: 'absolute', bottom: 10, left: 10, display: 'flex', gap: 1 }}>
+              {[1, 2, 3, 4, 5].map(n => (
+                <span key={n} style={{ fontSize: 10, color: n <= ub.rating ? 'var(--gold-light)' : 'rgba(255,255,255,.2)' }}>★</span>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ fontFamily: 'var(--serif)', fontSize: 13, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.35, marginBottom: 5 }}>{book.title}</div>
+      <div style={{ fontSize: 11, color: 'var(--ink-faint)', marginBottom: 8 }}>{book.author}</div>
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: sm.bg, color: sm.color, fontSize: 10, fontWeight: 500, padding: '3px 9px', borderRadius: 3 }}>
+        <div style={{ width: 5, height: 5, borderRadius: '50%', background: sm.color }} />
+        {sm.label.replace(/^[^\s]+\s/, '')}
+      </div>
+      {ub.review && <div style={{ marginTop: 8, fontSize: 11, color: 'var(--ink-light)', fontStyle: 'italic', lineHeight: 1.6 }}>«{ub.review}»</div>}
+    </div>
   )
 }

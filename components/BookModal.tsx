@@ -3,35 +3,39 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import type { Book } from '@/lib/books'
 
-type Props = {
-  book: Book | null
-  onClose: () => void
-  lang: string
+type Props = { book: Book | null; onClose: () => void; lang: string }
+
+const RATING_LABELS: Record<number, string>    = { 1: 'Плохо', 2: 'Слабо', 3: 'Нормально', 4: 'Хорошо', 5: 'Отлично' }
+const RATING_LABELS_KZ: Record<number, string> = { 1: 'Нашар', 2: 'Нашарлау', 3: 'Қалыпты', 4: 'Жақсы', 5: 'Өте жақсы' }
+
+const GRADE_META: Record<string, { label: string; labelKz: string; color: string }> = {
+  '6':     { label: '6 класс',           labelKz: '6 сынып',         color: '#2a5080' },
+  '7':     { label: '7 класс',           labelKz: '7 сынып',         color: '#1e4a2a' },
+  '8':     { label: '8 класс',           labelKz: '8 сынып',         color: '#5a2060' },
+  '9':     { label: '9 класс',           labelKz: '9 сынып',         color: '#3a2a6a' },
+  '10':    { label: '10 класс',          labelKz: '10 сынып',        color: '#7a4000' },
+  dynasty: { label: 'Читающая Династия', labelKz: 'Оқитын Әулет',   color: '#9b6e22' },
+  teacher: { label: 'Читающий Педагог',  labelKz: 'Оқитын Ұстаз',   color: '#1e3a2f' },
 }
 
-const RATING_LABELS: Record<number, string> = { 1: 'Так себе', 2: 'Неплохо', 3: 'Хорошо', 4: 'Отлично', 5: 'Шедевр' }
-const RATING_LABELS_KZ: Record<number, string> = { 1: 'Нашар', 2: 'Жаман емес', 3: 'Жақсы', 4: 'Өте жақсы', 5: 'Шедевр' }
-
 export default function BookModal({ book, onClose, lang }: Props) {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser]       = useState<any>(null)
   const [userBook, setUserBook] = useState<any>(null)
-  const [status, setStatus] = useState('want')
-  const [rating, setRating] = useState(0)
+  const [status, setStatus]   = useState('want')
+  const [rating, setRating]   = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
-  const [review, setReview] = useState('')
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-  const [phase, setPhase] = useState<'opening' | 'content'>('opening')
+  const [review, setReview]   = useState('')
+  const [saving, setSaving]   = useState(false)
+  const [saved, setSaved]     = useState(false)
+  const [phase, setPhase]     = useState<'open' | 'read'>('open')
   const supabase = createClient()
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user))
-
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
     document.body.style.overflow = 'hidden'
-
-    const t = setTimeout(() => setPhase('content'), 900)
+    const t = setTimeout(() => setPhase('read'), 820)
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
@@ -41,30 +45,22 @@ export default function BookModal({ book, onClose, lang }: Props) {
 
   useEffect(() => {
     if (!book || !user) return
-    supabase
-      .from('user_books')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('book_id', book.id)
-      .single()
+    supabase.from('user_books').select('*')
+      .eq('user_id', user.id).eq('book_id', book.id).single()
       .then(({ data }) => {
-        if (data) {
-          setUserBook(data)
-          setStatus(data.status)
-          setRating(data.rating || 0)
-          setReview(data.review || '')
-        }
+        if (data) { setUserBook(data); setStatus(data.status); setRating(data.rating || 0); setReview(data.review || '') }
       })
   }, [book, user])
 
   if (!book) return null
 
   const desc = lang === 'kz' ? (book.descKz || book.descRu) : book.descRu
-  const gradeLabel = book.grade === 'dynasty'
-    ? (lang === 'kz' ? 'Оқитын Әулет' : 'Читающая Династия')
-    : book.grade === 'teacher'
-    ? (lang === 'kz' ? 'Оқитын Ұстаз' : 'Читающий Педагог')
-    : `${book.grade} ${lang === 'kz' ? 'сынып' : 'класс'}`
+  const meta = GRADE_META[book.grade]
+  const gradeLabel = meta ? (lang === 'kz' ? meta.labelKz : meta.label) : book.grade
+  const gradeColor = meta?.color || '#555'
+
+  const displayRating = hoverRating || rating
+  const ratingLabel = displayRating ? (lang === 'kz' ? RATING_LABELS_KZ[displayRating] : RATING_LABELS[displayRating]) : ''
 
   const handleSave = async () => {
     if (!user) return
@@ -76,258 +72,174 @@ export default function BookModal({ book, onClose, lang }: Props) {
       const { data } = await supabase.from('user_books').insert(payload).select().single()
       setUserBook(data)
     }
-    setSaving(false)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2500)
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2500)
   }
 
-  const displayRating = hoverRating || rating
-  const ratingLabel = displayRating ? (lang === 'kz' ? RATING_LABELS_KZ[displayRating] : RATING_LABELS[displayRating]) : ''
-
   const statusOpts = [
-    { k: 'want',    label: lang === 'kz' ? '📚 Оқығым келеді' : '📚 Хочу прочитать', color: '#1a2d5a' },
-    { k: 'reading', label: lang === 'kz' ? '📖 Оқып жатырмын' : '📖 Читаю',          color: '#c9a84c' },
-    { k: 'done',    label: lang === 'kz' ? '✅ Оқып болдым'   : '✅ Прочитал(а)',      color: '#2a7a4a' },
+    { k: 'want',    icon: '📚', label: lang === 'kz' ? 'Оқығым келеді' : 'Хочу прочитать', c: 'var(--navy)' },
+    { k: 'reading', icon: '📖', label: lang === 'kz' ? 'Оқып жатырмын' : 'Читаю',          c: 'var(--gold-dark)' },
+    { k: 'done',    icon: '✅', label: lang === 'kz' ? 'Оқып болдым'   : 'Прочитал(а)',     c: 'var(--forest)' },
   ]
 
   return (
-    <div
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
-      style={{
-        position: 'fixed', inset: 0,
-        background: phase === 'opening' ? 'rgba(4,8,16,0.95)' : 'rgba(4,8,16,0.82)',
-        backdropFilter: 'blur(12px)',
-        zIndex: 600,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 20,
-        transition: 'background .6s ease',
-        animation: 'fadeIn .15s ease',
-      }}
-    >
-      {/* === OPENING PHASE: cinematic book reveal === */}
-      {phase === 'opening' && (
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: 32, animation: 'fadeIn .2s ease',
-        }}>
-          {/* Floating book cover */}
-          <div style={{ position: 'relative', animation: 'bookReveal .8s cubic-bezier(0.34,1.56,0.64,1) forwards' }}>
-            {/* Glow behind cover */}
-            <div style={{
-              position: 'absolute', inset: -30,
-              background: `radial-gradient(ellipse, ${book.color}60 0%, transparent 70%)`,
-              filter: 'blur(20px)',
-              animation: 'glowPulse 1s ease-in-out infinite alternate',
-            }} />
-            {/* Shadow pool */}
-            <div style={{
-              position: 'absolute', bottom: -16, left: '10%', right: '10%', height: 30,
-              background: 'rgba(0,0,0,0.5)', filter: 'blur(12px)', borderRadius: '50%',
-            }} />
-            {/* Book */}
-            <div style={{
-              width: 160, height: 230,
-              borderRadius: '3px 10px 10px 3px',
-              overflow: 'hidden',
-              boxShadow: '-6px 6px 20px rgba(0,0,0,0.6), -2px 2px 0 rgba(0,0,0,0.3), inset 4px 0 8px rgba(0,0,0,0.3)',
-              position: 'relative',
-            }}>
+    <div onClick={e => { if (e.target === e.currentTarget) onClose() }} style={{
+      position: 'fixed', inset: 0, zIndex: 600,
+      background: 'rgba(12,10,8,.88)',
+      backdropFilter: 'blur(14px)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+      animation: 'fadeIn .18s ease',
+    }}>
+
+      {/* ── OPENING PHASE: cinematic book reveal ── */}
+      {phase === 'open' && (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
+          <div style={{ position: 'relative', animation: 'bookOpen .75s cubic-bezier(.22,1,.36,1) both', transformStyle: 'preserve-3d' }}>
+            <div style={{ position: 'absolute', inset: -32, borderRadius: 24, background: `radial-gradient(ellipse, ${book.color}55, transparent 65%)`, filter: 'blur(20px)', animation: 'fadeIn .4s ease both' }} />
+            <div style={{ position: 'absolute', bottom: -20, left: '15%', right: '15%', height: 24, background: 'rgba(0,0,0,.5)', filter: 'blur(14px)', borderRadius: '50%' }} />
+            <div style={{ width: 160, height: 232, borderRadius: '3px 10px 10px 3px', overflow: 'hidden', boxShadow: `-8px 10px 40px rgba(0,0,0,.65), -2px 2px 0 rgba(0,0,0,.35), inset 5px 0 10px rgba(0,0,0,.25)`, position: 'relative' }}>
               <div style={{ width: '100%', height: '100%', background: book.color }}>
-                <img src={book.cover} alt={book.title}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                <img src={book.cover} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
               </div>
-              {/* Spine highlight */}
-              <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 8, background: 'linear-gradient(to right, rgba(255,255,255,0.15), transparent)' }} />
-              {/* Page edges */}
-              <div style={{ position: 'absolute', top: 2, right: 0, bottom: 2, width: 6, background: 'repeating-linear-gradient(to bottom, #f0ede6 0px, #e8e4dc 2px)', borderRadius: '0 2px 2px 0' }} />
+              <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 8, background: 'linear-gradient(to right,rgba(255,255,255,.2),transparent)' }} />
+              <div style={{ position: 'absolute', top: 2, right: 0, bottom: 2, width: 7, background: 'repeating-linear-gradient(to bottom,#f0ede6 0,#e0d8cc 2px)', borderRadius: '0 2px 2px 0' }} />
             </div>
           </div>
-
-          {/* Title */}
-          <div style={{ textAlign: 'center', animation: 'fadeUp .5s ease .3s both' }}>
-            <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 'clamp(16px,3vw,22px)', fontWeight: 700, color: '#fff', lineHeight: 1.2, marginBottom: 8 }}>
-              {book.title}
-            </div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', fontStyle: 'italic' }}>{book.author}</div>
+          <div style={{ textAlign: 'center', animation: 'fadeUp .45s .25s ease both' }}>
+            <div style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 22, fontWeight: 600, color: 'rgba(245,239,230,.9)', marginBottom: 6 }}>{book.title}</div>
+            <div style={{ fontSize: 13, color: 'rgba(245,239,230,.35)' }}>{book.author}</div>
           </div>
-
-          {/* Loading dots */}
-          <div style={{ display: 'flex', gap: 6, animation: 'fadeIn .3s ease .5s both' }}>
+          <div style={{ display: 'flex', gap: 6, animation: 'fadeIn .3s .5s ease both' }}>
             {[0, 1, 2].map(i => (
-              <div key={i} style={{
-                width: 6, height: 6, borderRadius: '50%', background: '#c9a84c',
-                animation: `pulse 1s ease-in-out ${i * 0.2}s infinite`,
-              }} />
+              <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gold)', animation: `floatUp 1s ${i * .2}s ease-in-out infinite` }} />
             ))}
           </div>
         </div>
       )}
 
-      {/* === CONTENT PHASE === */}
-      {phase === 'content' && (
+      {/* ── DETAIL PANEL ── */}
+      {phase === 'read' && (
         <div style={{
-          background: '#fff',
-          borderRadius: 20,
-          maxWidth: 780, width: '100%',
-          maxHeight: '92vh',
-          overflow: 'hidden',
-          boxShadow: '0 40px 100px rgba(0,0,0,0.6)',
-          display: 'flex',
-          animation: 'modalSlideIn .4s cubic-bezier(0.34,1.2,0.64,1) forwards',
+          background: 'var(--cream)', borderRadius: 24, maxWidth: 820, width: '100%',
+          maxHeight: '92vh', overflow: 'hidden', display: 'flex',
+          boxShadow: '0 40px 100px rgba(0,0,0,.55)',
+          animation: 'scaleIn .3s cubic-bezier(.34,1.2,.64,1) both',
         }}>
-          {/* LEFT: Large cover panel */}
-          <div style={{
-            width: 240, flexShrink: 0,
-            background: book.color,
-            position: 'relative', overflow: 'hidden',
-          }}>
-            <img src={book.cover} alt={book.title}
-              style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-              onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.6) 100%)' }} />
-
-            {/* Bottom info */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '24px 18px' }}>
-              <div style={{
-                display: 'inline-block',
-                background: '#c9a84c', color: '#0e1c3a',
-                borderRadius: 3, padding: '3px 10px',
-                fontSize: 9, fontWeight: 700, fontFamily: "'Unbounded', sans-serif", letterSpacing: '.06em',
-                marginBottom: 10,
-              }}>{gradeLabel}</div>
-              <div style={{ fontFamily: "'Unbounded', sans-serif", fontSize: 13, fontWeight: 700, color: '#fff', lineHeight: 1.3, textShadow: '0 1px 8px rgba(0,0,0,0.6)' }}>
-                {book.title}
-              </div>
+          {/* LEFT — Cover column */}
+          <div style={{ width: 280, flexShrink: 0, position: 'relative', overflow: 'hidden', background: book.color }}>
+            <img src={book.cover} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} onError={e => (e.target as HTMLImageElement).style.display = 'none'} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,.04) 0%, rgba(0,0,0,.62) 100%)' }} />
+            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 8, background: 'linear-gradient(to right, rgba(255,255,255,.2), transparent)' }} />
+            <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: 10, background: 'repeating-linear-gradient(to bottom, #f0ede6 0, #ddd5c5 2px)' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '28px 20px 24px' }}>
+              <div style={{ display: 'inline-block', background: gradeColor, color: '#fff', fontSize: 8.5, fontWeight: 700, fontFamily: 'var(--display)', letterSpacing: '.05em', padding: '3px 10px', borderRadius: 2, marginBottom: 12 }}>{gradeLabel}</div>
+              <div style={{ fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 17, fontWeight: 600, color: '#fff', lineHeight: 1.25, textShadow: '0 1px 10px rgba(0,0,0,.7)' }}>{book.title}</div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,.4)', marginTop: 8, fontStyle: 'italic' }}>{book.author}</div>
             </div>
-
-            {/* Spine shimmer */}
-            <div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: 6, background: 'linear-gradient(to right, rgba(255,255,255,0.2), transparent)' }} />
           </div>
 
-          {/* RIGHT: Detail panel */}
+          {/* RIGHT — Detail */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            {/* Header bar */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '16px 24px',
-              borderBottom: '1px solid rgba(26,45,90,0.10)',
-            }}>
-              <div>
-                <div style={{ fontSize: 11, color: 'rgba(14,28,58,0.45)', marginBottom: 2 }}>{book.author}</div>
+            {/* Top bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 12, fontStyle: 'italic', color: 'var(--ink-light)' }}>
+                {lang === 'kz' ? 'Кітап туралы' : 'О книге'}
               </div>
               <button onClick={onClose} style={{
-                background: 'rgba(14,28,58,0.06)', border: 'none', color: 'rgba(14,28,58,0.45)',
-                width: 32, height: 32, borderRadius: '50%', fontSize: 14,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 30, height: 30, borderRadius: '50%',
+                background: 'rgba(28,20,16,.07)', border: '1px solid var(--border)',
+                color: 'var(--ink-light)', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 transition: 'all .15s',
-              }}>✕</button>
+              }}>
+                <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1 1l7 7M8 1L1 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              </button>
             </div>
 
-            {/* Scrollable content */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px 24px' }}>
-              {/* Description */}
-              <p style={{ fontSize: 14, color: 'rgba(26,45,90,0.7)', lineHeight: 1.8, marginBottom: 24 }}>
-                {desc}
-              </p>
+            {/* Scrollable body */}
+            <div className="modal-scroll" style={{ overflowY: 'auto', padding: '22px 24px 28px', flex: 1 }}>
+              <p style={{
+                fontSize: 14, lineHeight: 1.9, color: 'var(--ink-mid)',
+                marginBottom: 24,
+                paddingLeft: 14, borderLeft: '2.5px solid var(--gold)',
+              }}>{desc}</p>
 
               {user ? (
                 <>
-                  {/* Status */}
-                  <div style={{ marginBottom: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#0e1c3a', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>
-                      {lang === 'kz' ? 'Күй' : 'Статус'}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      {statusOpts.map(({ k, label, color }) => (
-                        <button key={k} onClick={() => setStatus(k)} style={{
-                          padding: '7px 14px', borderRadius: 5, fontSize: 12, fontWeight: 500,
-                          background: status === k ? color : '#fff',
-                          color: status === k ? '#fff' : '#1a2d5a',
-                          border: `1.5px solid ${status === k ? color : 'rgba(26,45,90,0.15)'}`,
-                          transition: 'all .15s',
-                        }}>{label}</button>
-                      ))}
-                    </div>
+                  <FieldLabel>{lang === 'kz' ? 'Мәртебесі' : 'Статус'}</FieldLabel>
+                  <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap', marginBottom: 20 }}>
+                    {statusOpts.map(s => (
+                      <button key={s.k} onClick={() => setStatus(s.k)} style={{
+                        padding: '7px 13px', borderRadius: 6, fontSize: 11.5, fontWeight: 500,
+                        background: status === s.k ? s.c : 'transparent',
+                        color: status === s.k ? '#fff' : 'var(--ink-mid)',
+                        border: `1.5px solid ${status === s.k ? s.c : 'var(--border)'}`,
+                        transition: 'all .15s',
+                      }}>{s.icon} {s.label}</button>
+                    ))}
                   </div>
 
-                  {/* Rating */}
-                  <div style={{ marginBottom: 18 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#0e1c3a', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>
-                      {lang === 'kz' ? 'Баға' : 'Оценка'}
-                      {ratingLabel && <span style={{ marginLeft: 8, fontSize: 11, color: '#c9a84c', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>{ratingLabel}</span>}
-                    </div>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      {[1, 2, 3, 4, 5].map(n => (
-                        <button key={n}
-                          onClick={() => setRating(n === rating ? 0 : n)}
-                          onMouseEnter={() => setHoverRating(n)}
-                          onMouseLeave={() => setHoverRating(0)}
-                          style={{
-                            fontSize: 26, background: 'none', border: 'none',
-                            color: n <= displayRating ? '#c9a84c' : 'rgba(14,28,58,0.18)',
-                            transform: n <= displayRating ? 'scale(1.1)' : 'scale(1)',
-                            transition: 'color .12s, transform .12s', lineHeight: 1,
-                            padding: '0 2px',
-                          }}>★</button>
-                      ))}
-                    </div>
+                  <FieldLabel>
+                    {lang === 'kz' ? 'Баға' : 'Оценка'}
+                    {ratingLabel && <span style={{ marginLeft: 8, color: 'var(--gold)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>{ratingLabel}</span>}
+                  </FieldLabel>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 3, marginBottom: 20 }}>
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <button key={n}
+                        onMouseEnter={() => setHoverRating(n)} onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setRating(n === rating ? 0 : n)}
+                        style={{
+                          fontSize: 26, lineHeight: 1, padding: '0 2px',
+                          color: n <= displayRating ? 'var(--gold)' : 'rgba(28,20,16,.12)',
+                          transform: n <= displayRating ? 'scale(1.15)' : 'scale(1)',
+                          transition: 'all .1s',
+                        }}>★</button>
+                    ))}
                   </div>
 
-                  {/* Review */}
-                  <div style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 11, fontWeight: 600, color: '#0e1c3a', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 10 }}>
-                      {lang === 'kz' ? 'Пікір' : 'Отзыв'}
-                    </div>
-                    <textarea
-                      value={review}
-                      onChange={e => setReview(e.target.value)}
-                      placeholder={lang === 'kz' ? 'Кітап туралы ойыңды жаз...' : 'Напиши своё впечатление о книге...'}
-                      rows={3}
-                      style={{
-                        width: '100%', padding: '10px 12px', borderRadius: 6,
-                        border: '1.5px solid rgba(26,45,90,0.12)', fontSize: 13,
-                        color: '#0e1c3a', resize: 'vertical', outline: 'none',
-                        transition: 'border-color .15s',
-                      }}
-                      onFocus={e => (e.target.style.borderColor = '#c9a84c')}
-                      onBlur={e => (e.target.style.borderColor = 'rgba(26,45,90,0.12)')}
-                    />
-                  </div>
+                  <FieldLabel>{lang === 'kz' ? 'Пікір' : 'Отзыв'}</FieldLabel>
+                  <textarea value={review} onChange={e => setReview(e.target.value)} rows={3}
+                    placeholder={lang === 'kz' ? 'Пікіріңізді жазыңыз...' : 'Поделись впечатлением о книге...'}
+                    style={{
+                      width: '100%', padding: '11px 13px', borderRadius: 8, resize: 'none', outline: 'none',
+                      border: '1.5px solid var(--border)', fontSize: 13, color: 'var(--ink)', lineHeight: 1.75,
+                      background: 'var(--paper)', marginBottom: 20, transition: 'border-color .15s',
+                    }}
+                    onFocus={e => (e.target.style.borderColor = 'var(--gold)')}
+                    onBlur={e => (e.target.style.borderColor = 'var(--border)')} />
 
                   <button onClick={handleSave} disabled={saving} style={{
                     display: 'block', width: '100%', textAlign: 'center',
-                    background: saved ? '#2a7a4a' : '#c9a84c',
-                    color: saved ? '#fff' : '#0e1c3a',
-                    fontSize: 13, fontWeight: 700, fontFamily: "'Unbounded', sans-serif",
-                    padding: 13, borderRadius: 8, border: 'none',
-                    boxShadow: saved ? '0 4px 16px rgba(42,122,74,0.3)' : '0 4px 16px rgba(201,168,76,0.3)',
-                    transition: 'all .25s', letterSpacing: '.02em',
+                    padding: '13px', borderRadius: 9, fontSize: 12, fontWeight: 700, fontFamily: 'var(--display)', letterSpacing: '.04em',
+                    background: saved ? 'linear-gradient(135deg,#1e5a38,#2a7a4a)' : 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                    color: saved ? '#fff' : 'var(--ink)',
+                    border: 'none', cursor: saving ? 'wait' : 'pointer',
+                    boxShadow: saved ? '0 4px 16px rgba(30,90,56,.3)' : '0 4px 20px rgba(200,150,62,.3)',
+                    transition: 'all .3s',
                   }}>
-                    {saved ? '✓ ' + (lang === 'kz' ? 'Сақталды!' : 'Сохранено!') : saving ? '...' : (lang === 'kz' ? 'Сөреге қосу' : 'Добавить на полку')}
+                    {saved ? `✓ ${lang === 'kz' ? 'Сақталды!' : 'Сохранено!'}` : saving ? '...' : (lang === 'kz' ? 'Жапсырмаға қосу' : 'Добавить на полку')}
                   </button>
 
                   {book.url && (
-                    <a href={book.url} target="_blank" rel="noreferrer" style={{
-                      display: 'block', textAlign: 'center', marginTop: 12,
-                      fontSize: 13, color: '#c9a84c', fontWeight: 600,
-                    }}>
+                    <a href={book.url} target="_blank" rel="noreferrer" style={{ display: 'block', textAlign: 'center', marginTop: 12, fontSize: 13, color: 'var(--gold)', fontWeight: 600 }}>
                       {lang === 'kz' ? 'Онлайн оқу →' : 'Читать онлайн →'}
                     </a>
                   )}
                 </>
               ) : (
-                <div>
+                <div style={{ textAlign: 'center', paddingTop: 8 }}>
                   {book.url && (
                     <a href={book.url} target="_blank" rel="noreferrer" style={{
-                      display: 'block', textAlign: 'center', background: '#c9a84c',
-                      color: '#0e1c3a', fontSize: 13, fontWeight: 700, padding: 13, borderRadius: 8, marginBottom: 12,
+                      display: 'block', marginBottom: 14,
+                      background: 'linear-gradient(135deg, var(--gold), var(--gold-dark))',
+                      color: 'var(--ink)', fontFamily: 'var(--display)', fontSize: 11, fontWeight: 700,
+                      padding: '13px', borderRadius: 9, letterSpacing: '.04em',
+                      boxShadow: '0 4px 20px rgba(200,150,62,.3)',
                     }}>
                       {lang === 'kz' ? 'Онлайн оқу →' : 'Читать онлайн →'}
                     </a>
                   )}
-                  <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(14,28,58,0.45)' }}>
-                    <a href="/login" style={{ color: '#c9a84c', fontWeight: 600 }}>
+                  <div style={{ fontSize: 13, color: 'var(--ink-light)', lineHeight: 1.7 }}>
+                    <a href="/login" style={{ color: 'var(--gold)', fontWeight: 600 }}>
                       {lang === 'kz' ? 'Кіріңіз' : 'Войди'}
                     </a>
                     {lang === 'kz' ? ', сөреге қосу үшін' : ', чтобы добавить на полку и оставить отзыв'}
@@ -340,4 +252,8 @@ export default function BookModal({ book, onClose, lang }: Props) {
       )}
     </div>
   )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <div style={{ fontSize: 10, fontWeight: 500, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 9 }}>{children}</div>
 }
